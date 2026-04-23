@@ -1,0 +1,16 @@
+{
+  "name": "vlx",
+  "version": "1.0.0",
+  "description": "This is the server on Vlx Market Place app",
+  "license": "ISC",
+  "author": "Syed Aasim",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
