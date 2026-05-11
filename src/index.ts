@@ -16,6 +16,7 @@ app.get('/', (req, res) => {
 DbConnection.connect()
   .then(() => {
     app.listen(PORT, () => {
+      console.log("DB Connected successfully")
       console.log(`Server is running on port ${PORT}`);
     });
   })
