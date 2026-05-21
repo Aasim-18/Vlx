@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 8000;
 
 
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
+  res.send('Server is Up and Running');
 });
 
 DbConnection.connect()
@@ -23,3 +23,12 @@ DbConnection.connect()
   .catch((error) => {
     console.error('Failed to connect to the database:', error);
   });
+
+
+  // import routes here
+  import userRoute from "./modules/user/user.route.js";
+
+
+
+  // using routes
+  app.use('/api/v1/users', userRoute);
