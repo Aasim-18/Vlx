@@ -6,13 +6,10 @@ import { Webhook } from "svix";
 import dotenv from "dotenv";
 import type { WebhookEvent } from "@clerk/backend";
 import { db } from "../../DB/index.js";
-import { drizzle } from "drizzle-orm/node-postgres";
+
 
 
 dotenv.config();
-
-
-
 
 const RegisterUser = AsyncHandler(async (req, res) => {
 
@@ -87,22 +84,26 @@ const WebhookSecret = process.env.WEBHOOK_SECRET;
             throw new ApiError(400, "Primary email address not found")
            }
 
+
+           const newUser = await  db.insert(userTable).values({
+            clerkId: id,
+            email: primaryEmail.email_address,
+           })
+         
+           if (!newUser) {
+            throw new ApiError(500, "Failed to create user")
+           }
+
+           res.status(201).json(new ApiResponse(200, newUser, "User created successfully"));
+
          } catch (error) {
-          
-         }
-
+          console.error("Error creating user:", error);
            
-
+         }
 
          }
          
-       
-          
-
-
 })
-
-    
 
 
 export { RegisterUser };
