@@ -1,5 +1,8 @@
 import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import dotenv from "dotenv";
+
+
 
 dotenv.config();
 
@@ -14,4 +17,6 @@ const DbConnection = new Pool({
 });
 
 
-export { DbConnection };
+
+
+export { DbConnection};
