@@ -4,9 +4,10 @@ import {ApiError} from "../../utils/ApiError.js";
 import {ApiResponse} from "../../utils/ApiResponse.js";
 import { Webhook } from "svix";
 import dotenv from "dotenv";
-import type { WebhookEvent } from "@clerk/backend";
+import type { User, WebhookEvent } from "@clerk/backend";
 import { db } from "../../DB/index.js";
-
+import { eq } from "drizzle-orm";
+import { userSchma } from "./userValidation.js";
 
 
 dotenv.config();
@@ -62,13 +63,12 @@ const WebhookSecret = process.env.WEBHOOK_SECRET;
             throw new ApiError(404, "Clerk_id and Event Type not found")
           }
 
-           const existedUser = await db.query.userTable.findMany({
-            with: {
+           const existedUser = await db.query.userTable.findFirst({
+            where: eq(userTable.clerkId, id),
+            columns: {
               id: true,
-            },
-
+            }
            })
-
               
            if (existedUser) {
                throw new ApiError(400, "Authentication Error")
@@ -84,6 +84,9 @@ const WebhookSecret = process.env.WEBHOOK_SECRET;
             throw new ApiError(400, "Primary email address not found")
            }
 
+           // debugging logs
+            console.log("Clerk ID:", id);
+            console.log("Primary Email:", primaryEmail.email_address);
 
            const newUser = await  db.insert(userTable).values({
             clerkId: id,
@@ -94,16 +97,58 @@ const WebhookSecret = process.env.WEBHOOK_SECRET;
             throw new ApiError(500, "Failed to create user")
            }
 
-           res.status(201).json(new ApiResponse(200, newUser, "User created successfully"));
+           return res.status(200).json(
+           new ApiResponse(200, newUser, "User Created Succesfully")
+           )
 
          } catch (error) {
           console.error("Error creating user:", error);
+          throw new ApiError(500, "Error Saving User")
            
          }
 
          }
-         
 })
 
 
-export { RegisterUser };
+  const SetDetails = AsyncHandler( async (req, res) => {
+ 
+     const {name, mobile, batch} = req.body;
+     
+     const result = userSchma.safeParse(req.body)
+
+      if(!result.success) {
+        throw new ApiError(402, "Validation Failed")
+      }
+
+      const user = result.data;
+
+      const existedMobile = await db.query.userTable.findFirst({
+        where: eq(userTable.mobile, user.mobile),
+        columns: {
+          mobile: true
+        }
+      })
+
+      if(existedMobile){
+        throw new ApiError(401, "Mobile Number Already exist")
+      }
+
+     
+       const User = await db.insert(userTable).values({
+        name: user.name,
+        batch: user.batch,
+        mobile: user.mobile
+       })
+
+       if (!User) {
+        throw new ApiError(500, "Error Saving User Deatils")
+       }
+
+        res.status(200).json(
+           new ApiResponse(200, User, "Registration Completed")
+        )
+
+  })
+
+export { RegisterUser, SetDetails };

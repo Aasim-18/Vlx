@@ -8,7 +8,7 @@ export const userTable = pgTable("users", {
   email: varchar("email", { length: 25 }).unique(),
   mobile: varchar("mobile", { length: 10 }).unique(),
   clerkId: varchar("clerk_id", { length: 255 }).unique(),
-  batch: integer("batch"),
+  batch: varchar("batch", {length: 15}),
   collageId: integer("collage_id")
              .references(() => collageTable.id),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
