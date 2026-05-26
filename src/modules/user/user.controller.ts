@@ -4,7 +4,7 @@ import {ApiError} from "../../utils/ApiError.js";
 import {ApiResponse} from "../../utils/ApiResponse.js";
 import { Webhook } from "svix";
 import dotenv from "dotenv";
-import type { User, WebhookEvent } from "@clerk/backend";
+import type { WebhookEvent } from "@clerk/backend";
 import { db } from "../../DB/index.js";
 import { eq } from "drizzle-orm";
 import { userSchma } from "./userValidation.js";
@@ -148,6 +148,7 @@ const WebhookSecret = process.env.WEBHOOK_SECRET;
         res.status(200).json(
            new ApiResponse(200, User, "Registration Completed")
         )
+        
 
   })
 
