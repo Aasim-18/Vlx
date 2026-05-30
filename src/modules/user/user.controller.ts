@@ -1,155 +1,134 @@
-import {AsyncHandler} from "../../utils/AsyncHandler.js";
-import {userTable} from "../../DB/schema/user.js";
-import {ApiError} from "../../utils/ApiError.js";
-import {ApiResponse} from "../../utils/ApiResponse.js";
-import { Webhook } from "svix";
-import dotenv from "dotenv";
-import type { WebhookEvent } from "@clerk/backend";
-import { db } from "../../DB/index.js";
-import { eq } from "drizzle-orm";
-import { userSchma } from "./userValidation.js";
-
+import { AsyncHandler } from '../../utils/AsyncHandler.js';
+import { userTable } from '../../DB/schema/user.js';
+import { ApiError } from '../../utils/ApiError.js';
+import { ApiResponse } from '../../utils/ApiResponse.js';
+import { Webhook } from 'svix';
+import dotenv from 'dotenv';
+import type { WebhookEvent } from '@clerk/backend';
+import { db } from '../../DB/index.js';
+import { eq } from 'drizzle-orm';
+import { userSchma } from './userValidation.js';
 
 dotenv.config();
 
 const RegisterUser = AsyncHandler(async (req, res) => {
-
-const WebhookSecret = process.env.WEBHOOK_SECRET;
+  const WebhookSecret = process.env.WEBHOOK_SECRET;
 
   if (!WebhookSecret) {
-    throw new ApiError(500, "Webhook secret is not defined");
+    throw new ApiError(500, 'Webhook secret is not defined');
   }
 
-    const {
-        "svix-id": svixId,
-        "svix-timestamp": svixTimestamp,
-        "svix-signature": svixSignature,
-    } = req.headers;
+  const {
+    'svix-id': svixId,
+    'svix-timestamp': svixTimestamp,
+    'svix-signature': svixSignature,
+  } = req.headers;
 
-    if (!svixId || !svixTimestamp || !svixSignature) {
-        throw new ApiError(400, "Missing Svix headers");
-    }
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    throw new ApiError(400, 'Missing Svix headers');
+  }
 
-    const payload = await req.body;
+  const payload = await req.body;
 
-    const body = JSON.stringify(payload);
+  const body = JSON.stringify(payload);
 
-    const webhook = new Webhook(WebhookSecret);
+  const webhook = new Webhook(WebhookSecret);
 
-    let evt: WebhookEvent;
-    
+  let evt: WebhookEvent;
+
+  try {
+    evt = webhook.verify(body, {
+      'svix-id': svixId as string,
+      'svix-timestamp': svixTimestamp as string,
+      'svix-signature': svixSignature as string,
+    }) as WebhookEvent;
+  } catch (error) {
+    console.error('Webhook verification failed:', error);
+    throw new ApiError(400, 'Invalid webhook signature');
+  }
+  // for development
+  console.log('Received event:', evt);
+
+  const { id } = evt.data;
+  const eventType = evt.type;
+
+  if (eventType == 'user.created') {
     try {
-           evt = webhook.verify(body, {
-               "svix-id": svixId as string,
-               "svix-timestamp": svixTimestamp as string,
-               "svix-signature": svixSignature as string,
-
-           }) as WebhookEvent;
-    } catch (error) {
-      console.error("Webhook verification failed:", error);
-      throw new ApiError(400, "Invalid webhook signature");
-    }
-     // for development
-    console.log("Received event:", evt);
-
-        const {id} = evt.data;
-        const eventType = evt.type;
-  
-         if(eventType == "user.created"){
-         
-         try {
-
-           if (!id || !eventType) {
-            throw new ApiError(404, "Clerk_id and Event Type not found")
-          }
-
-           const existedUser = await db.query.userTable.findFirst({
-            where: eq(userTable.clerkId, id),
-            columns: {
-              id: true,
-            }
-           })
-              
-           if (existedUser) {
-               throw new ApiError(400, "Authentication Error")
-           }
-
-           const { email_addresses, "primary_email_address_id": primaryEmailAddressId } = evt.data;
-
-           const primaryEmail = email_addresses.find(
-            (email) => email.id === primaryEmailAddressId
-           );
-
-           if(!primaryEmail) {
-            throw new ApiError(400, "Primary email address not found")
-           }
-
-           // debugging logs
-            console.log("Clerk ID:", id);
-            console.log("Primary Email:", primaryEmail.email_address);
-
-           const newUser = await  db.insert(userTable).values({
-            clerkId: id,
-            email: primaryEmail.email_address,
-           })
-         
-           if (!newUser) {
-            throw new ApiError(500, "Failed to create user")
-           }
-
-           return res.status(200).json(
-           new ApiResponse(200, newUser, "User Created Succesfully")
-           )
-
-         } catch (error) {
-          console.error("Error creating user:", error);
-          throw new ApiError(500, "Error Saving User")
-           
-         }
-
-         }
-})
-
-
-  const SetDetails = AsyncHandler( async (req, res) => {
- 
-     const {name, mobile, batch} = req.body;
-     
-     const result = userSchma.safeParse(req.body)
-
-      if(!result.success) {
-        throw new ApiError(402, "Validation Failed")
+      if (!id || !eventType) {
+        throw new ApiError(404, 'Clerk_id and Event Type not found');
       }
 
-      const user = result.data;
-
-      const existedMobile = await db.query.userTable.findFirst({
-        where: eq(userTable.mobile, user.mobile),
+      const existedUser = await db.query.userTable.findFirst({
+        where: eq(userTable.clerkId, id),
         columns: {
-          mobile: true
-        }
-      })
+          id: true,
+        },
+      });
 
-      if(existedMobile){
-        throw new ApiError(401, "Mobile Number Already exist")
+      if (existedUser) {
+        throw new ApiError(400, 'Authentication Error');
       }
 
-     
-       const User = await db.insert(userTable).values({
-        name: user.name,
-        batch: user.batch,
-        mobile: user.mobile
-       })
+      const { email_addresses, primary_email_address_id: primaryEmailAddressId } = evt.data;
 
-       if (!User) {
-        throw new ApiError(500, "Error Saving User Deatils")
-       }
+      const primaryEmail = email_addresses.find((email) => email.id === primaryEmailAddressId);
 
-        res.status(200).json(
-           new ApiResponse(200, User, "Registration Completed")
-        )
-        
+      if (!primaryEmail) {
+        throw new ApiError(400, 'Primary email address not found');
+      }
 
-  })
+      // debugging logs
+      console.log('Clerk ID:', id);
+      console.log('Primary Email:', primaryEmail.email_address);
+
+      const newUser = await db.insert(userTable).values({
+        clerkId: id,
+        email: primaryEmail.email_address,
+      });
+
+      if (!newUser) {
+        throw new ApiError(500, 'Failed to create user');
+      }
+
+      return res.status(200).json(new ApiResponse(200, newUser, 'User Created Succesfully'));
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new ApiError(500, 'Error Saving User');
+    }
+  }
+});
+
+const SetDetails = AsyncHandler(async (req, res) => {
+  const result = userSchma.safeParse(req.body);
+
+  if (!result.success) {
+    throw new ApiError(402, 'Validation Failed');
+  }
+
+  const user = result.data;
+
+  const existedMobile = await db.query.userTable.findFirst({
+    where: eq(userTable.mobile, user.mobile),
+    columns: {
+      mobile: true,
+    },
+  });
+
+  if (existedMobile) {
+    throw new ApiError(401, 'Mobile Number Already exist');
+  }
+
+  const User = await db.insert(userTable).values({
+    name: user.name,
+    batch: user.batch,
+    mobile: user.mobile,
+  });
+
+  if (!User) {
+    throw new ApiError(500, 'Error Saving User Deatils');
+  }
+
+  res.status(200).json(new ApiResponse(200, User, 'Registration Completed'));
+});
 
 export { RegisterUser, SetDetails };
