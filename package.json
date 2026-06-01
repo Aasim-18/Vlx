@@ -10,18 +10,22 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "swagger": "ts-node src/services/swagger.ts"
   },
   "dependencies": {
     "@clerk/backend": "^3.4.11",
     "@clerk/express": "^2.1.22",
     "@ngrok/ngrok": "^1.7.0",
+    "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
+    "multer": "^2.1.1",
     "pg": "^8.20.0",
     "svix": "^1.94.0",
+    "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2",
     "zod": "^4.4.3"
   },
@@ -29,7 +33,9 @@
     "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.1.0",
     "@types/pg": "^8.20.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.4.1",
     "eslint-config-prettier": "^10.1.8",
@@ -37,6 +43,7 @@
     "jiti": "^2.7.0",
     "nodemon": "^3.1.14",
     "prettier": "3.8.3",
+    "swagger-autogen": "^2.23.7",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.0"
