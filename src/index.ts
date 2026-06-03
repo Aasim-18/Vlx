@@ -60,12 +60,11 @@ DbConnection.connect()
   });
 
 // ngrok connection
-
 ngrok
   .connect({ addr: PORT, authtoken_from_env: true })
   .then((listener) => console.log(`Ingress established at: ${listener.url()}`));
 
-// import swagger ui
+
 
 // import routes here
 import userRoute from './modules/user/user.route.js';

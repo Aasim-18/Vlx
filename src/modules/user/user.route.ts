@@ -4,6 +4,6 @@ import { RegisterUser, SetDetails } from './user.controller.js';
 const router = Router();
 
 router.post('/register', RegisterUser);
-router.post('/complete', SetDetails);
+router.patch('/complete', SetDetails);
 
 export default router;
