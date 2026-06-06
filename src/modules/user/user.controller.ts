@@ -6,10 +6,9 @@ import { Webhook } from 'svix';
 import dotenv from 'dotenv';
 import type { WebhookEvent } from '@clerk/backend';
 import { db } from '../../DB/index.js';
-import { eq,ne,and } from 'drizzle-orm';
+import { eq, ne, and } from 'drizzle-orm';
 import { userSchma } from './userValidation.js';
-import { getAuth } from "@clerk/express";
-
+import { getAuth } from '@clerk/express';
 
 dotenv.config();
 
@@ -100,11 +99,8 @@ const RegisterUser = AsyncHandler(async (req, res) => {
   }
 });
 
-
-
 const SetDetails = AsyncHandler(async (req, res) => {
-
-   const { userId } = getAuth(req);
+  const { userId } = getAuth(req);
 
   if (!userId) {
     throw new ApiError(401, 'Unauthorized');
@@ -119,10 +115,7 @@ const SetDetails = AsyncHandler(async (req, res) => {
   const user = result.data;
 
   const existedMobile = await db.query.userTable.findFirst({
-    where: and(
-      eq(userTable.mobile, user.mobile),
-      ne(userTable.clerkId, userId)
-    ),
+    where: and(eq(userTable.mobile, user.mobile), ne(userTable.clerkId, userId)),
     columns: {
       mobile: true,
     },
@@ -132,7 +125,8 @@ const SetDetails = AsyncHandler(async (req, res) => {
     throw new ApiError(401, 'Mobile Number Already exist');
   }
 
-  const [User] = await db.update(userTable)
+  const [User] = await db
+    .update(userTable)
     .set({
       name: user.name,
       mobile: user.mobile,
