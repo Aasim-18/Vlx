@@ -65,7 +65,9 @@ ngrok
   .then((listener) => console.log(`Ingress established at: ${listener.url()}`));
 
 // import routes here
-import userRoute from './modules/user/user.route.js';
+import userRoutes from './modules/user/user.route.js';
+import productRoutes from './modules/products/product.route.js';
 
 // using routes
-app.use('/api/v1/users', userRoute);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/products', productRoutes);

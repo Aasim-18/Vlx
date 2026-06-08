@@ -3,14 +3,11 @@ import { userTable } from '../../DB/schema/user.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { ApiResponse } from '../../utils/ApiResponse.js';
 import { Webhook } from 'svix';
-import dotenv from 'dotenv';
 import type { WebhookEvent } from '@clerk/backend';
 import { db } from '../../DB/index.js';
 import { eq, ne, and } from 'drizzle-orm';
 import { userSchma } from './userValidation.js';
 import { getAuth } from '@clerk/express';
-
-dotenv.config();
 
 const RegisterUser = AsyncHandler(async (req, res) => {
   const WebhookSecret = process.env.WEBHOOK_SECRET;
@@ -131,6 +128,7 @@ const SetDetails = AsyncHandler(async (req, res) => {
       name: user.name,
       mobile: user.mobile,
       batch: user.batch,
+      collageName: user.collageName,
     })
     .where(eq(userTable.clerkId, userId))
     .returning();
