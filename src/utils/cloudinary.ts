@@ -25,14 +25,14 @@ const uploadImage = async (LocalFilePath: string) => {
     console.log('Cloudinary upload result:', result.url);
 
     return result;
-  } catch (error) {
+  } catch (err) {
     if (fs.existsSync(LocalFilePath)) {
-      fs.unlink(LocalFilePath, (err) => {
+      fs.unlink(LocalFilePath,  (err) => {
         if (err) console.error('Failed to delete temp file:', err);
       });
     }
 
-    console.error('Error uploading image to Cloudinary:', error);
+    console.error('Error uploading image to Cloudinary:', err);
     throw new ApiError(500, 'Error uploading image to Cloudinary');
   }
 };

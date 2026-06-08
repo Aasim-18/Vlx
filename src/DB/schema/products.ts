@@ -1,4 +1,4 @@
-import { varchar, integer, pgTable, boolean, text } from 'drizzle-orm/pg-core';
+import { varchar, integer, pgTable, boolean, jsonb } from 'drizzle-orm/pg-core';
 import { userTable } from './user.js';
 import { sql } from 'drizzle-orm';
 
@@ -14,8 +14,5 @@ export const productTable = pgTable('products', {
   detail: varchar('productDetail', { length: 225 }).notNull(),
   isAvalable: boolean('isAvailable').notNull(),
   status: varchar('status', { length: 50 }).notNull(),
-  images: text('images')
-    .array()
-    .notNull()
-    .default(sql`ARRAY[]::text[]`),
+  images: jsonb("images").notNull().default(sql`'[]'::jsonb`)
 });
