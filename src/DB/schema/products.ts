@@ -14,5 +14,7 @@ export const productTable = pgTable('products', {
   detail: varchar('productDetail', { length: 225 }).notNull(),
   isAvalable: boolean('isAvailable').notNull(),
   status: varchar('status', { length: 50 }).notNull(),
-  images: jsonb("images").notNull().default(sql`'[]'::jsonb`)
+  images: jsonb('images')
+    .notNull()
+    .default(sql`'[]'::jsonb`),
 });

@@ -27,7 +27,7 @@ const uploadImage = async (LocalFilePath: string) => {
     return result;
   } catch (err) {
     if (fs.existsSync(LocalFilePath)) {
-      fs.unlink(LocalFilePath,  (err) => {
+      fs.unlink(LocalFilePath, (err) => {
         if (err) console.error('Failed to delete temp file:', err);
       });
     }
