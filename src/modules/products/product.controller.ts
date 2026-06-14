@@ -13,6 +13,7 @@ const createProduct = AsyncHandler(async (req, res) => {
   const result = productSchema.safeParse(req.body);
 
   if (!result.success) {
+    console.log('Zod errors:', JSON.stringify(result.error.flatten(), null, 2));
     throw new ApiError(400, 'Invalid product data');
   }
 
@@ -36,9 +37,15 @@ const createProduct = AsyncHandler(async (req, res) => {
 
   // first uploading to cloudinary here
 
-  const LocalFilePath = req.file?.path;
+  if (!req.file) {
+    throw new ApiError(402, 'No File uploaded');
+  }
 
-  const ImageUrl = await uploadImage(LocalFilePath as string);
+  const Image = await uploadImage(req.file.buffer);
+
+  if (!Image) {
+    throw new ApiError(500, 'Failed to save Image');
+  }
 
   const NewProduct = await db.insert(productTable).values({
     name: product.name,
@@ -48,7 +55,7 @@ const createProduct = AsyncHandler(async (req, res) => {
     userId: existedUser.id,
     isAvalable: true,
     status: product.status,
-    images: ImageUrl.url,
+    images: Image.secure_url,
     collageName: existedUser.collageName,
   });
 

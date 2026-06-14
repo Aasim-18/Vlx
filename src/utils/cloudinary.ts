@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
-import fs from 'fs';
+import type { UploadApiResponse, UploadApiOptions } from 'cloudinary';
 import { ApiError } from '../utils/ApiError.js';
 
 dotenv.config();
@@ -11,30 +11,30 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET as string,
 });
 
-const uploadImage = async (LocalFilePath: string) => {
-  try {
-    if (!LocalFilePath) {
-      throw new ApiError(400, 'No file provided');
+const uploadImage = async (
+  buffer: Buffer,
+  options: UploadApiOptions = {},
+): Promise<UploadApiResponse> => {
+  return new Promise((resolve, reject) => {
+    if (!buffer) {
+      return reject(new ApiError(402, 'No Buffer found'));
     }
 
-    const result = await cloudinary.uploader.upload(LocalFilePath, {
-      resource_type: 'auto',
-    });
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'vlx/uploads',
+        resource_type: 'image',
+        ...options,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        if (!result) return reject(new ApiError(402, 'Cloudinary returned no result'));
+        resolve(result);
+      },
+    );
 
-    //debug
-    console.log('Cloudinary upload result:', result.url);
-
-    return result;
-  } catch (err) {
-    if (fs.existsSync(LocalFilePath)) {
-      fs.unlink(LocalFilePath, (err) => {
-        if (err) console.error('Failed to delete temp file:', err);
-      });
-    }
-
-    console.error('Error uploading image to Cloudinary:', err);
-    throw new ApiError(500, 'Error uploading image to Cloudinary');
-  }
+    stream.end(buffer);
+  });
 };
 
 export { uploadImage };

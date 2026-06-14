@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import swaggerUi from 'swagger-ui-express';
+import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
+app.use(globalErrorHandler);
 
 app.get('/', (req, res) => {
   res.send('Server is Up and Running');
