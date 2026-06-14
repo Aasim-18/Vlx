@@ -13,7 +13,7 @@ const FileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallb
   ) {
     cb(null, true);
   } else {
-    cb(new ApiError(401, 'Only .jpeg, .jpg and .png files are allowed!'));
+    cb(new ApiError(400, 'Only .jpeg, .jpg and .png files are allowed!'));
   }
 };
 

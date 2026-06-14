@@ -1,4 +1,4 @@
-import { varchar, integer, pgTable, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { varchar, integer, pgTable, boolean, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
 import { userTable } from './user.js';
 import { sql } from 'drizzle-orm';
 
@@ -17,4 +17,12 @@ export const productTable = pgTable('products', {
   images: jsonb('images')
     .notNull()
     .default(sql`'[]'::jsonb`),
-});
+},
+
+  (table) => [
+        uniqueIndex('product_title_unique').on(table.name, table.userId),
+      ]
+
+);
+
+      

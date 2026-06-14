@@ -1,7 +1,7 @@
 import express from 'express';
 import { DbConnection } from './config/db.js';
 import dotenv from 'dotenv';
-import { clerkMiddleware } from '@clerk/express';
+// import { clerkMiddleware } from '@clerk/express';
 import ngrok from '@ngrok/ngrok';
 import cors from 'cors';
 import fs from 'fs';
@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(clerkMiddleware());
+// app.use(clerkMiddleware());
 app.use(
   cors({
     // for developmet setting origin as *

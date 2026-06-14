@@ -19,7 +19,9 @@ const createProduct = AsyncHandler(async (req, res) => {
 
   const product = result.data;
 
-  const { userId } = getAuth(req);
+  // const { userId } = getAuth(req);
+
+  const userId = "user_3ERufMhVwZmVgpr1ikJINM3FHkP";
 
   if (!userId) {
     throw new ApiError(401, 'Unauthorized');
@@ -35,7 +37,8 @@ const createProduct = AsyncHandler(async (req, res) => {
     throw new ApiError(404, 'User not found');
   }
 
-  // first uploading to cloudinary here
+  // first uploading to cloudinary here;
+
 
   if (!req.file) {
     throw new ApiError(402, 'No File uploaded');
@@ -59,6 +62,8 @@ const createProduct = AsyncHandler(async (req, res) => {
     collageName: existedUser.collageName,
   });
 
+  
+
   if (!NewProduct) {
     throw new ApiError(402, 'Error Saving Prodcut');
   }
@@ -78,8 +83,10 @@ const updateProduct = AsyncHandler(async (req, res) => {
   const product = result.data;
   const { userId } = getAuth(req);
 
+  
+
   if (!userId) {
-    throw new ApiError(401, 'Unauthorized');
+    throw new ApiError(401, 'Unauthorized!, user not found');
   }
 
   const [existedUser] = await db
