@@ -9,7 +9,7 @@ import { eq, ne, and } from 'drizzle-orm';
 import { userSchma } from './userValidation.js';
 import { getAuth } from '@clerk/express';
 
-const RegisterUser = AsyncHandler(async (req, res) => {
+const HandleUser = AsyncHandler(async (req, res) => {
   const WebhookSecret = process.env.WEBHOOK_SECRET;
 
   if (!WebhookSecret) {
@@ -91,7 +91,45 @@ const RegisterUser = AsyncHandler(async (req, res) => {
       return res.status(200).json(new ApiResponse(200, newUser, 'User Created Succesfully'));
     } catch (error) {
       console.error('Error creating user:', error);
-      throw new ApiError(500, 'Error Saving User');
+      throw new ApiError(401, 'Error Saving User');
+    }
+  }
+
+  if (eventType === 'user.deleted') {
+    try {
+      if (!id || !eventType) {
+        throw new ApiError(404, 'Clerk_id and Event Type not found');
+      }
+
+      const { userId } = getAuth(req);
+
+      if (!userId) {
+        throw new ApiError(401, ' not Authorized!');
+      }
+
+      const [existedUser] = await db
+        .select({ id: userTable.id })
+        .from(userTable)
+        .where(eq(userTable.clerkId, userId))
+        .limit(1);
+
+      if (!existedUser) {
+        throw new ApiError(404, 'User not found');
+      }
+
+      const deletedUser = await db
+        .delete(userTable)
+        .where(eq(userTable.clerkId, userId))
+        .returning();
+
+      if (!deletedUser) {
+        throw new ApiError(500, 'Error deleting User');
+      }
+
+      res.status(200).json(new ApiResponse(200, 'User Deleted Successfully'));
+    } catch (error) {
+      console.error('error deleting User: ', error);
+      throw new ApiError(401, 'Error deleting User');
     }
   }
 });
@@ -140,4 +178,4 @@ const SetDetails = AsyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, User, 'Registration Completed'));
 });
 
-export { RegisterUser, SetDetails };
+export { HandleUser, SetDetails };

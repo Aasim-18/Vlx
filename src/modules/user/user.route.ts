@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { RegisterUser, SetDetails } from './user.controller.js';
+import { HandleUser, SetDetails } from './user.controller.js';
 
 const router = Router();
 
-router.post('/register', RegisterUser);
+router.post('/register', HandleUser);
 router.patch('/complete', SetDetails);
 
 export default router;

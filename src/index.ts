@@ -1,7 +1,7 @@
 import express from 'express';
 import { DbConnection } from './config/db.js';
 import dotenv from 'dotenv';
-// import { clerkMiddleware } from '@clerk/express';
+import { clerkMiddleware } from '@clerk/express';
 import ngrok from '@ngrok/ngrok';
 import cors from 'cors';
 import fs from 'fs';
@@ -17,9 +17,19 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// routes
+
+// import routes here
+import userRoutes from './modules/user/user.route.js';
+import productRoutes from './modules/products/product.route.js';
+
+// using routes
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/products', productRoutes);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(clerkMiddleware());
+app.use(clerkMiddleware());
 app.use(
   cors({
     // for developmet setting origin as *
@@ -54,6 +64,7 @@ DbConnection.connect()
   .then(() => {
     app.listen(PORT, () => {
       console.log('DB Connected successfully');
+
       console.log(`Server is running on port ${PORT}`);
     });
   })
@@ -65,11 +76,3 @@ DbConnection.connect()
 ngrok
   .connect({ addr: PORT, authtoken_from_env: true })
   .then((listener) => console.log(`Ingress established at: ${listener.url()}`));
-
-// import routes here
-import userRoutes from './modules/user/user.route.js';
-import productRoutes from './modules/products/product.route.js';
-
-// using routes
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/products', productRoutes);
