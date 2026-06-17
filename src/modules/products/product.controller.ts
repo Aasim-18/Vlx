@@ -19,9 +19,7 @@ const createProduct = AsyncHandler(async (req, res) => {
 
   const product = result.data;
 
-  // const { userId } = getAuth(req);
-
-  const userId = "user_3ERufMhVwZmVgpr1ikJINM3FHkP";
+  const { userId } = getAuth(req);
 
   if (!userId) {
     throw new ApiError(401, 'Unauthorized');
@@ -38,7 +36,6 @@ const createProduct = AsyncHandler(async (req, res) => {
   }
 
   // first uploading to cloudinary here;
-
 
   if (!req.file) {
     throw new ApiError(402, 'No File uploaded');
@@ -62,8 +59,6 @@ const createProduct = AsyncHandler(async (req, res) => {
     collageName: existedUser.collageName,
   });
 
-  
-
   if (!NewProduct) {
     throw new ApiError(402, 'Error Saving Prodcut');
   }
@@ -82,8 +77,6 @@ const updateProduct = AsyncHandler(async (req, res) => {
 
   const product = result.data;
   const { userId } = getAuth(req);
-
-  
 
   if (!userId) {
     throw new ApiError(401, 'Unauthorized!, user not found');
@@ -113,11 +106,14 @@ const updateProduct = AsyncHandler(async (req, res) => {
     throw new ApiError(403, 'You are not authorized to update this product');
   }
 
-  let ImageUrl = { url: existedProduct.images };
+  if (!req.file) {
+    throw new ApiError(402, 'No File uploaded');
+  }
 
-  if (req.file) {
-    const LocalFilePath = req.file?.path;
-    ImageUrl = await uploadImage(LocalFilePath);
+  const Image = await uploadImage(req.file.buffer);
+
+  if (!Image) {
+    throw new ApiError(500, 'Failed to save Image');
   }
 
   const updatedProduct = await db
@@ -128,7 +124,7 @@ const updateProduct = AsyncHandler(async (req, res) => {
       category: product.category,
       price: product.price,
       status: product.status,
-      images: ImageUrl.url,
+      images: Image.secure_url,
     })
     .where(eq(productTable.userId, existedUser.id))
     .returning();
@@ -189,6 +185,7 @@ const deleteProduct = AsyncHandler(async (req, res) => {
 
 const getAllProducts = AsyncHandler(async (req, res) => {
   const products = await db.select().from(productTable);
+
   res.status(200).json(new ApiResponse(200, products, 'Products Retrieved Successfully'));
 });
 
