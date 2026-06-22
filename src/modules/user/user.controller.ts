@@ -1,5 +1,6 @@
 import { AsyncHandler } from '../../utils/AsyncHandler.js';
-import { userTable } from '../../DB/schema/user.js';
+import { user } from '../../DB/schema/user.js';
+import { user_profile } from "../../DB/schema/userProfile.js";
 import { ApiError } from '../../utils/ApiError.js';
 import { ApiResponse } from '../../utils/ApiResponse.js';
 import { Webhook } from 'svix';
@@ -56,8 +57,8 @@ const HandleUser = AsyncHandler(async (req, res) => {
         throw new ApiError(404, 'Clerk_id and Event Type not found');
       }
 
-      const existedUser = await db.query.userTable.findFirst({
-        where: eq(userTable.clerkId, id),
+      const existedUser = await db.query.user.findFirst({
+        where: eq(user.clerkId, id),
         columns: {
           id: true,
         },
@@ -79,7 +80,7 @@ const HandleUser = AsyncHandler(async (req, res) => {
       console.log('Clerk ID:', id);
       console.log('Primary Email:', primaryEmail.email_address);
 
-      const newUser = await db.insert(userTable).values({
+      const newUser = await db.insert(user).values({
         clerkId: id,
         email: primaryEmail.email_address,
       });
@@ -108,9 +109,9 @@ const HandleUser = AsyncHandler(async (req, res) => {
       }
 
       const [existedUser] = await db
-        .select({ id: userTable.id })
-        .from(userTable)
-        .where(eq(userTable.clerkId, userId))
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.clerkId, userId))
         .limit(1);
 
       if (!existedUser) {
@@ -118,8 +119,8 @@ const HandleUser = AsyncHandler(async (req, res) => {
       }
 
       const deletedUser = await db
-        .delete(userTable)
-        .where(eq(userTable.clerkId, userId))
+        .delete(user)
+        .where(eq(user.clerkId, userId))
         .returning();
 
       if (!deletedUser) {
@@ -149,8 +150,8 @@ const SetDetails = AsyncHandler(async (req, res) => {
 
   const user = result.data;
 
-  const existedMobile = await db.query.userTable.findFirst({
-    where: and(eq(userTable.mobile, user.mobile), ne(userTable.clerkId, userId)),
+  const existedMobile = await db.query.user_profile.findFirst({
+    where: and(eq(user_profile.mobile, user.mobile), ne(user_profile.user_id, userId)),
     columns: {
       mobile: true,
     },
@@ -161,14 +162,14 @@ const SetDetails = AsyncHandler(async (req, res) => {
   }
 
   const [User] = await db
-    .update(userTable)
+    .update(user_profile)
     .set({
       name: user.name,
       mobile: user.mobile,
       batch: user.batch,
       collageName: user.collageName,
     })
-    .where(eq(userTable.clerkId, userId))
+    .where(eq(user_profile.user_id, userId))
     .returning();
 
   if (!User) {

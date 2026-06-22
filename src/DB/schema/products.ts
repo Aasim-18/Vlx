@@ -1,16 +1,16 @@
-import { varchar, integer, pgTable, boolean, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
-import { userTable } from './user.js';
+import { varchar, uuid, pgTable, boolean, jsonb, uniqueIndex, integer} from 'drizzle-orm/pg-core';
+import { user } from './user.js';
 import { sql } from 'drizzle-orm';
 
 export const productTable = pgTable(
   'products',
   {
-    id: integer('product_id').primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
     name: varchar('name', { length: 55 }).notNull(),
     category: varchar('category', { length: 55 }).notNull(),
-    userId: integer('user_id')
+    userId: uuid('user_id')
       .notNull()
-      .references(() => userTable.id),
+      .references(() => user.id, { onDelete: 'cascade' }),
     price: integer('price').notNull(),
     collageName: varchar('collageName', { length: 125 }),
     detail: varchar('productDetail', { length: 225 }).notNull(),
