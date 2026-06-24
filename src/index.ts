@@ -1,14 +1,18 @@
 import express from 'express';
-import { DbConnection } from './config/db.js';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import { clerkMiddleware } from '@clerk/express';
 import ngrok from '@ngrok/ngrok';
-import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import swaggerUi from 'swagger-ui-express';
+
+import { DbConnection } from './config/db.js';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
+// import Routes here
+import userRoutes from './modules/user/user.route.js';
+import productRoutes from './modules/products/product.route.js';
 
 dotenv.config();
 
@@ -17,33 +21,31 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// routes
-
-// import routes here
-import userRoutes from './modules/user/user.route.js';
-import productRoutes from './modules/products/product.route.js';
-
-// using routes
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/products', productRoutes);
-
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(clerkMiddleware());
 app.use(
   cors({
-    // for developmet setting origin as *
+    // for development setting origin as *
     origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
-app.use(globalErrorHandler);
 
-app.get('/', (req, res) => {
+// Routes
+app.get('/', (_req, res) => {
   res.send('Server is Up and Running');
 });
 
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/products', productRoutes);
+
+// Error Handler
+app.use(globalErrorHandler);
+
+// Swagger Docs
 const swaggerPath = path.join(__dirname, 'services', 'swagger-output.json');
 let swaggerDocument: Record<string, unknown> | null = null;
 
@@ -60,11 +62,11 @@ if (swaggerDocument) {
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 }
 
+// Start Server
 DbConnection.connect()
   .then(() => {
     app.listen(PORT, () => {
       console.log('DB Connected successfully');
-
       console.log(`Server is running on port ${PORT}`);
     });
   })
@@ -72,7 +74,7 @@ DbConnection.connect()
     console.error('Failed to connect to the database:', error);
   });
 
-// ngrok connection
+// ngrok Tunnel
 ngrok
   .connect({ addr: PORT, authtoken_from_env: true })
   .then((listener) => console.log(`Ingress established at: ${listener.url()}`));
