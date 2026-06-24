@@ -1,6 +1,6 @@
 import { AsyncHandler } from '../../utils/AsyncHandler.js';
 import { user } from '../../DB/schema/user.js';
-import { user_profile } from "../../DB/schema/userProfile.js";
+import { user_profile } from '../../DB/schema/userProfile.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { ApiResponse } from '../../utils/ApiResponse.js';
 import { Webhook } from 'svix';
@@ -118,10 +118,7 @@ const HandleUser = AsyncHandler(async (req, res) => {
         throw new ApiError(404, 'User not found');
       }
 
-      const deletedUser = await db
-        .delete(user)
-        .where(eq(user.clerkId, userId))
-        .returning();
+      const deletedUser = await db.delete(user).where(eq(user.clerkId, userId)).returning();
 
       if (!deletedUser) {
         throw new ApiError(500, 'Error deleting User');

@@ -1,11 +1,11 @@
-import { varchar, uuid, pgTable, boolean, jsonb, uniqueIndex, integer} from 'drizzle-orm/pg-core';
+import { varchar, uuid, pgTable, boolean, jsonb, uniqueIndex, integer } from 'drizzle-orm/pg-core';
 import { user } from './user.js';
 import { sql } from 'drizzle-orm';
 
-export const productTable = pgTable(
+export const products = pgTable(
   'products',
   {
-    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
     name: varchar('name', { length: 55 }).notNull(),
     category: varchar('category', { length: 55 }).notNull(),
     userId: uuid('user_id')

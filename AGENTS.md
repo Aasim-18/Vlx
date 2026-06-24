@@ -1,17 +1,18 @@
 # Vlx — Agent Code Review Instructions
- 
+
 This file instructs the AI agent on how to review backend code changes for the Vlx
 college marketplace platform. When asked to review a file, a diff, or a PR, follow
 the checklist below in priority order and report findings clearly.
- 
+
 ---
- 
+
 ## Project Context
- 
+
 **Stack:** Node.js · Express · TypeScript (strict) · PostgreSQL · Drizzle ORM ·
 Clerk (auth) · Cloudinary (image uploads) · Zod (validation) · Socket.io · Svix (webhooks)
- 
+
 **Folder conventions:**
+
 ```
 src/
   routes/        # Express routers — no business logic here
@@ -24,26 +25,29 @@ src/
   utils/
   types/
 ```
- 
+
 **Response envelope — every endpoint must return:**
+
 ```ts
 { success: true,  data: T }          // 2xx
 { success: false, error: string }    // 4xx / 5xx
 ```
- 
+
 ---
- 
+
 ## Review Checklist
- 
+
 Work through all five sections. For each issue found, state:
+
 - **File and line** (if visible)
 - **Severity:** `BLOCKER` | `WARN` | `SUGGESTION`
 - **What is wrong**
 - **What the fix should be**
+
 ---
- 
-### 1. Security & Auth Checks  ← highest priority
- 
+
+### 1. Security & Auth Checks ← highest priority
+
 - [ ] Every non-public route calls Clerk auth middleware before the controller.
       Flag any route that reads `req.body` or queries the DB without first
       verifying `userId` from `getAuth(req)`.
@@ -69,22 +73,25 @@ Work through all five sections. For each issue found, state:
 - [ ] Environment variables accessed via `process.env` must be validated at
       startup (e.g., via a `config.ts` that throws on missing required vars).
       Flag direct `process.env.X` access scattered across service files.
+
 ---
- 
+
 ### 2. TypeScript Strictness
- 
+
 - [ ] No `any`. Every `any` is a BLOCKER unless there is a comment explaining
       why it cannot be avoided. Suggest a proper type or `unknown` + type guard.
 - [ ] No non-null assertions (`!`) without an inline comment justifying safety.
 - [ ] No `as SomeType` casts unless the underlying type is truly `unknown`.
       Double-cast `as unknown as X` is always a BLOCKER.
 - [ ] Drizzle table types must use `$inferSelect` / `$inferInsert`:
+
 ```ts
-      type Product    = typeof products.$inferSelect;
-      type NewProduct = typeof products.$inferInsert;
+type Product = typeof products.$inferSelect;
+type NewProduct = typeof products.$inferInsert;
 ```
+
       Flag manual type duplication that mirrors schema columns.
- 
+
 - [ ] Zod schemas must be the **single source of truth** for request shapes.
       TypeScript types for request bodies must be derived via `z.infer<typeof schema>`,
       not written manually.
@@ -92,24 +99,25 @@ Work through all five sections. For each issue found, state:
       service functions: `Promise<Product>`, `Promise<Product | null>`, etc.
 - [ ] `express.Request` and `express.Response` generics should be typed where
       the shape is known — e.g., `Request<{ id: string }, ..., CreateProductBody>`.
+
 ---
- 
+
 ### 3. API Design Consistency
- 
+
 - [ ] Routes use plural nouns and kebab-case: `/products`, `/college-listings`.
       Flag verb-in-path patterns like `/getProduct` or `/createUser`.
 - [ ] HTTP status codes must match semantics:
-      | Situation            | Code |
+      | Situation | Code |
       |----------------------|------|
-      | Resource created     | 201  |
-      | Successful delete    | 204  |
-      | Validation failure   | 400  |
-      | Missing/invalid auth | 401  |
+      | Resource created | 201 |
+      | Successful delete | 204 |
+      | Validation failure | 400 |
+      | Missing/invalid auth | 401 |
       | Forbidden (owns check) | 403 |
-      | Not found            | 404  |
-      | Conflict (duplicate) | 409  |
-      | Server error         | 500  |
- 
+      | Not found | 404 |
+      | Conflict (duplicate) | 409 |
+      | Server error | 500 |
+
 - [ ] No business logic in route files (`routes/`). Routers attach middleware
       and delegate to controllers. Flag any `db.query` or service call directly
       in a router file.
@@ -119,10 +127,11 @@ Work through all five sections. For each issue found, state:
       a collection without `limit` / `offset` or cursor params.
 - [ ] Consistent error response shape. Flag any `res.json({ message: '...' })`
       that does not match the `{ success: false, error: string }` envelope.
+
 ---
- 
+
 ### 4. Error Handling
- 
+
 - [ ] Every async route handler or controller must be wrapped to catch
       rejections. Either use an `asyncHandler` wrapper or explicit try/catch.
       An unhandled async rejection is a BLOCKER.
@@ -137,10 +146,11 @@ Work through all five sections. For each issue found, state:
       internal stack traces.
 - [ ] `null` returns from Drizzle `findFirst` must be explicitly handled.
       A missing record should produce a 404, not a downstream null-dereference crash.
+
 ---
- 
+
 ### 5. Performance — DB Queries
- 
+
 - [ ] No N+1 queries. If a loop calls the DB per-item, flag it and suggest a
       Drizzle `with` (eager load) or a single `inArray` query instead.
 - [ ] Drizzle relation queries must use `with` to join related data in one
@@ -155,26 +165,27 @@ Work through all five sections. For each issue found, state:
       Flag any image operation that is called per-item in a collection.
 - [ ] Pagination must use consistent semantics — flag mixing of `offset`-based
       and cursor-based pagination within the same resource.
+
 ---
- 
+
 ## How to Report
- 
+
 Structure your review output as:
- 
+
 ```
 ## Review Summary
 <one paragraph overall assessment>
- 
+
 ## Blockers
 <list — must be fixed before merge>
- 
+
 ## Warnings
 <list — should be fixed, potential bugs or bad patterns>
- 
+
 ## Suggestions
 <list — improvements, not blocking>
 ```
- 
+
 If no issues are found in a section, write `None found.` and move on.
 Do not generate fixes automatically unless explicitly asked — report first,
 wait for confirmation, then apply.

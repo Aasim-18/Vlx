@@ -1,12 +1,12 @@
 import { AsyncHandler } from '../../utils/AsyncHandler.js';
-import { productTable } from '../../DB/schema/products.js';
+import { products } from '../../DB/schema/exporter.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { ApiResponse } from '../../utils/ApiResponse.js';
 import { productSchema } from './product.validation.js';
 import { db } from '../../DB/index.js';
 import { eq } from 'drizzle-orm';
 import { getAuth } from '@clerk/express';
-import { userTable } from '../../DB/schema/user.js';
+import { user, user_profile } from '../../DB/schema/exporter.js';
 import { uploadImage } from '../../utils/cloudinary.js';
 
 const createProduct = AsyncHandler(async (req, res) => {
@@ -26,9 +26,9 @@ const createProduct = AsyncHandler(async (req, res) => {
   }
 
   const [existedUser] = await db
-    .select({ id: userTable.id, collageName: userTable.collageName })
-    .from(userTable)
-    .where(eq(userTable.clerkId, userId))
+    .select({ id: user_profile.user_id, collageName: user_profile.collageName })
+    .from(user_profile)
+    .where(eq(user_profile.user_id, userId))
     .limit(1);
 
   if (!existedUser) {
@@ -47,7 +47,7 @@ const createProduct = AsyncHandler(async (req, res) => {
     throw new ApiError(500, 'Failed to save Image');
   }
 
-  const NewProduct = await db.insert(productTable).values({
+  const NewProduct = await db.insert(products).values({
     name: product.name,
     detail: product.details,
     category: product.category,
@@ -83,19 +83,25 @@ const updateProduct = AsyncHandler(async (req, res) => {
   }
 
   const [existedUser] = await db
-    .select({ id: userTable.id })
-    .from(userTable)
-    .where(eq(userTable.clerkId, userId))
+    .select({ id: user_profile.user_id })
+    .from(user_profile)
+    .where(eq(user_profile.user_id, userId))
     .limit(1);
 
   if (!existedUser) {
     throw new ApiError(404, 'User not found');
   }
 
+  const productId = req.params.id;
+
+  if (!productId || typeof productId !== 'string') {
+    throw new ApiError(400, 'ID not provided');
+  }
+
   const [existedProduct] = await db
-    .select({ id: productTable.id, userId: productTable.userId, images: productTable.images })
-    .from(productTable)
-    .where(eq(productTable.userId, existedUser.id))
+    .select({ id: products.id, userId: products.userId, images: products.images })
+    .from(products)
+    .where(eq(products.id, productId))
     .limit(1);
 
   if (!existedProduct) {
@@ -117,7 +123,7 @@ const updateProduct = AsyncHandler(async (req, res) => {
   }
 
   const updatedProduct = await db
-    .update(productTable)
+    .update(products)
     .set({
       name: product.name,
       detail: product.details,
@@ -126,7 +132,7 @@ const updateProduct = AsyncHandler(async (req, res) => {
       status: product.status,
       images: Image.secure_url,
     })
-    .where(eq(productTable.userId, existedUser.id))
+    .where(eq(products.userId, existedUser.id))
     .returning();
 
   if (!updatedProduct || updatedProduct.length === 0) {
@@ -139,6 +145,12 @@ const updateProduct = AsyncHandler(async (req, res) => {
 // delete product
 
 const deleteProduct = AsyncHandler(async (req, res) => {
+  const productId = req.params.id;
+
+  if (!productId || typeof productId !== 'string') {
+    throw new ApiError(401, 'ID not provided');
+  }
+
   const { userId } = getAuth(req);
 
   if (!userId) {
@@ -146,9 +158,9 @@ const deleteProduct = AsyncHandler(async (req, res) => {
   }
 
   const [existedUser] = await db
-    .select({ id: userTable.id })
-    .from(userTable)
-    .where(eq(userTable.clerkId, userId))
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.clerkId, userId))
     .limit(1);
 
   if (!existedUser) {
@@ -157,8 +169,8 @@ const deleteProduct = AsyncHandler(async (req, res) => {
 
   const [existedProduct] = await db
     .select()
-    .from(productTable)
-    .where(eq(productTable.userId, existedUser.id))
+    .from(products)
+    .where(eq(products.id, productId))
     .limit(1);
 
   if (!existedProduct) {
@@ -169,10 +181,7 @@ const deleteProduct = AsyncHandler(async (req, res) => {
     throw new ApiError(403, 'You are not authorized to delete this product');
   }
 
-  const deletedProduct = await db
-    .delete(productTable)
-    .where(eq(productTable.userId, existedUser.id))
-    .returning();
+  const deletedProduct = await db.delete(products).where(eq(products.id, productId)).returning();
 
   if (!deletedProduct || deletedProduct.length === 0) {
     throw new ApiError(402, 'Error Deleting Product');
@@ -184,9 +193,9 @@ const deleteProduct = AsyncHandler(async (req, res) => {
 // Get All Products
 
 const getAllProducts = AsyncHandler(async (req, res) => {
-  const products = await db.select().from(productTable);
+  const AllProducts = await db.select().from(products);
 
-  res.status(200).json(new ApiResponse(200, products, 'Products Retrieved Successfully'));
+  res.status(200).json(new ApiResponse(200, AllProducts, 'Products Retrieved Successfully'));
 });
 
 export { createProduct, updateProduct, deleteProduct, getAllProducts };
