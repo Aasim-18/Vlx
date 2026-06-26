@@ -17,7 +17,7 @@ const uploadImage = async (
 ): Promise<UploadApiResponse> => {
   return new Promise((resolve, reject) => {
     if (!buffer) {
-      return reject(new ApiError(402, 'No Buffer found'));
+      return reject(new ApiError(400, 'No Buffer found'));
     }
 
     const stream = cloudinary.uploader.upload_stream(
@@ -28,7 +28,7 @@ const uploadImage = async (
       },
       (error, result) => {
         if (error) return reject(error);
-        if (!result) return reject(new ApiError(402, 'Cloudinary returned no result'));
+        if (!result) return reject(new ApiError(500, 'Cloudinary returned no result'));
         resolve(result);
       },
     );

@@ -14,7 +14,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,20 +38,20 @@ app.use('/api/v1/products', productRoutes);
 // Error Handler
 app.use(globalErrorHandler);
 
-
 // Start Server
 DbConnection.connect()
   .then(() => {
     app.listen(PORT, () => {
       console.log('DB Connected successfully');
       console.log(`Server is running on port ${PORT}`);
+      // ngrok Tunnel
+      ngrok
+        .connect({ addr: PORT, authtoken_from_env: true })
+        .then((listener) => console.log(`Ingress established at: ${listener.url()}`))
+        .catch((error) => console.error('Failed to establish ngrok tunnel:', error));
     });
   })
   .catch((error) => {
     console.error('Failed to connect to the database:', error);
+    process.exit(1);
   });
-
-// ngrok Tunnel
-ngrok
-  .connect({ addr: PORT, authtoken_from_env: true })
-  .then((listener) => console.log(`Ingress established at: ${listener.url()}`));

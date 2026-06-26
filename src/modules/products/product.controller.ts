@@ -38,7 +38,7 @@ const createProduct = AsyncHandler(async (req, res) => {
   // first uploading to cloudinary here;
 
   if (!req.file) {
-    throw new ApiError(402, 'No File uploaded');
+    throw new ApiError(400, 'No File uploaded');
   }
 
   const Image = await uploadImage(req.file.buffer);
@@ -60,7 +60,7 @@ const createProduct = AsyncHandler(async (req, res) => {
   });
 
   if (!NewProduct) {
-    throw new ApiError(402, 'Error Saving Prodcut');
+    throw new ApiError(500, 'Error Saving Product');
   }
 
   res.status(200).json(new ApiResponse(200, NewProduct, 'Product Crreated Successfully'));
@@ -113,7 +113,7 @@ const updateProduct = AsyncHandler(async (req, res) => {
   }
 
   if (!req.file) {
-    throw new ApiError(402, 'No File uploaded');
+    throw new ApiError(400, 'No File uploaded');
   }
 
   const Image = await uploadImage(req.file.buffer);
@@ -136,7 +136,7 @@ const updateProduct = AsyncHandler(async (req, res) => {
     .returning();
 
   if (!updatedProduct || updatedProduct.length === 0) {
-    throw new ApiError(402, 'Error Updating Product');
+    throw new ApiError(500, 'Error Updating Product');
   }
 
   res.status(200).json(new ApiResponse(200, updatedProduct[0], 'Product Updated Successfully'));
@@ -148,7 +148,7 @@ const deleteProduct = AsyncHandler(async (req, res) => {
   const productId = req.params.id;
 
   if (!productId || typeof productId !== 'string') {
-    throw new ApiError(401, 'ID not provided');
+    throw new ApiError(400, 'ID not provided');
   }
 
   const { userId } = getAuth(req);
@@ -184,7 +184,7 @@ const deleteProduct = AsyncHandler(async (req, res) => {
   const deletedProduct = await db.delete(products).where(eq(products.id, productId)).returning();
 
   if (!deletedProduct || deletedProduct.length === 0) {
-    throw new ApiError(402, 'Error Deleting Product');
+    throw new ApiError(500, 'Error Deleting Product');
   }
 
   res.status(200).json(new ApiResponse(200, deletedProduct[0], 'Product Deleted Successfully'));

@@ -27,9 +27,7 @@ const HandleUser = AsyncHandler(async (req, res) => {
     throw new ApiError(400, 'Missing Svix headers');
   }
 
-  const payload = await req.body;
-
-  const body = JSON.stringify(payload);
+  const body = JSON.stringify(req.body);
 
   const webhook = new Webhook(WebhookSecret);
 
@@ -52,83 +50,69 @@ const HandleUser = AsyncHandler(async (req, res) => {
   const eventType = evt.type;
 
   if (eventType == 'user.created') {
-    try {
-      if (!id || !eventType) {
-        throw new ApiError(404, 'Clerk_id and Event Type not found');
-      }
-
-      const existedUser = await db.query.user.findFirst({
-        where: eq(user.clerkId, id),
-        columns: {
-          id: true,
-        },
-      });
-
-      if (existedUser) {
-        throw new ApiError(400, 'Authentication Error');
-      }
-
-      const { email_addresses, primary_email_address_id: primaryEmailAddressId } = evt.data;
-
-      const primaryEmail = email_addresses.find((email) => email.id === primaryEmailAddressId);
-
-      if (!primaryEmail) {
-        throw new ApiError(400, 'Primary email address not found');
-      }
-
-      // debugging logs
-      console.log('Clerk ID:', id);
-      console.log('Primary Email:', primaryEmail.email_address);
-
-      const newUser = await db.insert(user).values({
-        clerkId: id,
-        email: primaryEmail.email_address,
-      });
-
-      if (!newUser) {
-        throw new ApiError(500, 'Failed to create user');
-      }
-
-      return res.status(200).json(new ApiResponse(200, newUser, 'User Created Succesfully'));
-    } catch (error) {
-      console.error('Error creating user:', error);
-      throw new ApiError(401, 'Error Saving User');
+    if (!id || !eventType) {
+      throw new ApiError(404, 'Clerk_id and Event Type not found');
     }
+
+    const existedUser = await db.query.user.findFirst({
+      where: eq(user.clerkId, id),
+      columns: {
+        id: true,
+      },
+    });
+
+    if (existedUser) {
+      throw new ApiError(400, 'Authentication Error');
+    }
+
+    const { email_addresses, primary_email_address_id: primaryEmailAddressId } = evt.data;
+
+    const primaryEmail = email_addresses.find((email) => email.id === primaryEmailAddressId);
+
+    if (!primaryEmail) {
+      throw new ApiError(400, 'Primary email address not found');
+    }
+
+    const newUser = await db.insert(user).values({
+      clerkId: id,
+      email: primaryEmail.email_address,
+    });
+
+    if (!newUser) {
+      throw new ApiError(500, 'Failed to create user');
+    }
+
+    return res.status(200).json(new ApiResponse(200, newUser, 'User Created Successfully'));
   }
 
   if (eventType === 'user.deleted') {
-    try {
-      if (!id || !eventType) {
-        throw new ApiError(404, 'Clerk_id and Event Type not found');
-      }
-
-      const { userId } = getAuth(req);
-
-      if (!userId) {
-        throw new ApiError(401, ' not Authorized!');
-      }
-
-      const [existedUser] = await db
-        .select({ id: user.id })
-        .from(user)
-        .where(eq(user.clerkId, userId))
-        .limit(1);
-
-      if (!existedUser) {
-        throw new ApiError(404, 'User not found');
-      }
-
-      const deletedUser = await db.delete(user).where(eq(user.clerkId, userId)).returning();
-
-      if (!deletedUser) {
-        throw new ApiError(500, 'Error deleting User');
-      }
-
-      res.status(200).json(new ApiResponse(200, 'User Deleted Successfully'));
-    } catch (error) {
-      console.error('error deleting User: ', error);
-      throw new ApiError(401, 'Error deleting User');
+    if (!id || !eventType) {
+      throw new ApiError(404, 'Clerk_id and Event Type not found');
     }
+
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      throw new ApiError(401, 'Not Authorized');
+    }
+
+    const [existedUser] = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.clerkId, userId))
+      .limit(1);
+
+    if (!existedUser) {
+      throw new ApiError(404, 'User not found');
+    }
+
+    const deletedUser = await db.delete(user).where(eq(user.clerkId, userId)).returning();
+
+    if (!deletedUser) {
+      throw new ApiError(500, 'Error deleting User');
+    }
+
+    res.status(200).json(new ApiResponse(200, 'User Deleted Successfully'));
   }
 });
 
@@ -142,7 +126,7 @@ const SetDetails = AsyncHandler(async (req, res) => {
   const result = userSchma.safeParse(req.body);
 
   if (!result.success) {
-    throw new ApiError(402, 'Validation Failed');
+    throw new ApiError(400, 'Validation Failed');
   }
 
   const user = result.data;
@@ -155,7 +139,7 @@ const SetDetails = AsyncHandler(async (req, res) => {
   });
 
   if (existedMobile) {
-    throw new ApiError(401, 'Mobile Number Already exist');
+    throw new ApiError(409, 'Mobile Number Already exists');
   }
 
   const [User] = await db
