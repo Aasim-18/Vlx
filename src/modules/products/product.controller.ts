@@ -6,7 +6,7 @@ import { productSchema } from './product.validation.js';
 import { db } from '../../DB/index.js';
 import { eq } from 'drizzle-orm';
 import { getAuth } from '@clerk/express';
-import { user, user_profile } from '../../DB/schema/exporter.js';
+import { user, userProfile } from '../../DB/schema/exporter.js';
 import { uploadImage } from '../../utils/cloudinary.js';
 
 const createProduct = AsyncHandler(async (req, res) => {
@@ -26,9 +26,9 @@ const createProduct = AsyncHandler(async (req, res) => {
   }
 
   const [existedUser] = await db
-    .select({ id: user_profile.user_id, collageName: user_profile.collageName })
-    .from(user_profile)
-    .where(eq(user_profile.user_id, userId))
+    .select({ id: userProfile.user_id, collageName: userProfile.collageName })
+    .from(userProfile)
+    .where(eq(userProfile.user_id, userId))
     .limit(1);
 
   if (!existedUser) {
@@ -83,9 +83,9 @@ const updateProduct = AsyncHandler(async (req, res) => {
   }
 
   const [existedUser] = await db
-    .select({ id: user_profile.user_id })
-    .from(user_profile)
-    .where(eq(user_profile.user_id, userId))
+    .select({ id: userProfile.user_id })
+    .from(userProfile)
+    .where(eq(userProfile.user_id, userId))
     .limit(1);
 
   if (!existedUser) {

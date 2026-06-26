@@ -1,7 +1,7 @@
 import { pgTable, timestamp, varchar, uuid } from 'drizzle-orm/pg-core';
 import { user } from './exporter.js';
 
-export const user_profile = pgTable('users_profile', {
+export const userProfile = pgTable('usersProfile', {
   user_id: uuid('user_id')
     .primaryKey()
     .notNull()

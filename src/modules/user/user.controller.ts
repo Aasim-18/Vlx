@@ -1,6 +1,6 @@
 import { AsyncHandler } from '../../utils/AsyncHandler.js';
 import { user } from '../../DB/schema/user.js';
-import { user_profile } from '../../DB/schema/userProfile.js';
+import { userProfile } from '../../DB/schema/userProfile.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { ApiResponse } from '../../utils/ApiResponse.js';
 import { Webhook } from 'svix';
@@ -147,8 +147,8 @@ const SetDetails = AsyncHandler(async (req, res) => {
 
   const user = result.data;
 
-  const existedMobile = await db.query.user_profile.findFirst({
-    where: and(eq(user_profile.mobile, user.mobile), ne(user_profile.user_id, userId)),
+  const existedMobile = await db.query.userProfile.findFirst({
+    where: and(eq(userProfile.mobile, user.mobile), ne(userProfile.user_id, userId)),
     columns: {
       mobile: true,
     },
@@ -159,14 +159,14 @@ const SetDetails = AsyncHandler(async (req, res) => {
   }
 
   const [User] = await db
-    .update(user_profile)
+    .update(userProfile)
     .set({
       name: user.name,
       mobile: user.mobile,
       batch: user.batch,
       collageName: user.collageName,
     })
-    .where(eq(user_profile.user_id, userId))
+    .where(eq(userProfile.user_id, userId))
     .returning();
 
   if (!User) {
