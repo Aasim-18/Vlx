@@ -8,7 +8,6 @@ import type { WebhookEvent } from '@clerk/backend';
 import { db } from '../../DB/index.js';
 import { eq, ne, and } from 'drizzle-orm';
 import { userSchma } from './userValidation.js';
-import { getAuth } from '@clerk/express';
 
 const HandleUser = AsyncHandler(async (req, res) => {
   const WebhookSecret = process.env.WEBHOOK_SECRET;
@@ -90,23 +89,17 @@ const HandleUser = AsyncHandler(async (req, res) => {
       throw new ApiError(404, 'Clerk_id and Event Type not found');
     }
 
-    const { userId } = getAuth(req);
-
-    if (!userId) {
-      throw new ApiError(401, 'Not Authorized');
-    }
-
     const [existedUser] = await db
       .select({ id: user.id })
       .from(user)
-      .where(eq(user.clerkId, userId))
+      .where(eq(user.clerkId, id))
       .limit(1);
 
     if (!existedUser) {
       throw new ApiError(404, 'User not found');
     }
 
-    const deletedUser = await db.delete(user).where(eq(user.clerkId, userId)).returning();
+    const deletedUser = await db.delete(user).where(eq(user.clerkId, id)).returning();
 
     if (!deletedUser) {
       throw new ApiError(500, 'Error deleting User');
@@ -117,11 +110,7 @@ const HandleUser = AsyncHandler(async (req, res) => {
 });
 
 const SetDetails = AsyncHandler(async (req, res) => {
-  const { userId } = getAuth(req);
-
-  if (!userId) {
-    throw new ApiError(401, 'Unauthorized');
-  }
+  const userId = req.userId!;
 
   const result = userSchma.safeParse(req.body);
 
