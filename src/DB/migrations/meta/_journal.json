@@ -15,6 +15,13 @@
       "when": 1781442041224,
       "tag": "0001_yellow_post",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782751358989,
+      "tag": "0002_milky_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

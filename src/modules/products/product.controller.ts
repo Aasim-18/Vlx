@@ -48,7 +48,6 @@ const createProduct = AsyncHandler(async (req, res) => {
     category: product.category,
     price: product.price,
     userId: existedUser.id,
-    isAvalable: true,
     status: product.status,
     images: Image.secure_url,
     collageName: existedUser.collageName,
@@ -123,7 +122,7 @@ const updateProduct = AsyncHandler(async (req, res) => {
       status: product.status,
       images: Image.secure_url,
     })
-    .where(eq(products.userId, existedUser.id))
+    .where(eq(products.id, productId))
     .returning();
 
   if (!updatedProduct || updatedProduct.length === 0) {
@@ -133,6 +132,7 @@ const updateProduct = AsyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, updatedProduct[0], 'Product Updated Successfully'));
 });
 
+// update product status
 const updateProductStatus = AsyncHandler(async (req, res) => {
   const productId = req.params.id;
   const { status } = req.body;
@@ -245,6 +245,8 @@ const getProduct = AsyncHandler(async (req, res) => {
 });
 
 // My listings
+
+
 
 // Get All Products
 
