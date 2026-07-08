@@ -18,19 +18,27 @@ const createProduct = AsyncHandler(async (req, res) => {
 
   const product = result.data;
 
-  const userId = req.userId!;
+  const clerkId = req.userId!;
 
-  const [existedUser] = await db
-    .select({ id: userProfile.user_id, collageName: userProfile.collageName })
-    .from(userProfile)
-    .where(eq(userProfile.user_id, userId))
+  const [existingUser] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.clerkId, clerkId))
     .limit(1);
 
-  if (!existedUser) {
+  if (!existingUser) {
     throw new ApiError(404, 'User not found');
   }
 
-  // first uploading to cloudinary here;
+  const [existedUser] = await db
+    .select({ id: userProfile.userId, collageName: userProfile.collageName })
+    .from(userProfile)
+    .where(eq(userProfile.userId, existingUser.id))
+    .limit(1);
+
+  if (!existedUser) {
+    throw new ApiError(404, 'User profile not found');
+  }
 
   if (!req.file) {
     throw new ApiError(400, 'No File uploaded');
@@ -70,16 +78,26 @@ const updateProduct = AsyncHandler(async (req, res) => {
   }
 
   const product = result.data;
-  const userId = req.userId!;
+  const clerkId = req.userId!;
+
+  const [existingUser] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.clerkId, clerkId))
+    .limit(1);
+
+  if (!existingUser) {
+    throw new ApiError(404, 'User not found');
+  }
 
   const [existedUser] = await db
-    .select({ id: userProfile.user_id })
+    .select({ id: userProfile.userId })
     .from(userProfile)
-    .where(eq(userProfile.user_id, userId))
+    .where(eq(userProfile.userId, existingUser.id))
     .limit(1);
 
   if (!existedUser) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, 'User profile not found');
   }
 
   const productId = req.params.id;
@@ -143,14 +161,24 @@ const updateProductStatus = AsyncHandler(async (req, res) => {
 
   const userId = req.userId!;
 
+  const [existingUser] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.clerkId, userId))
+    .limit(1);
+
+  if (!existingUser) {
+    throw new ApiError(404, 'User not found');
+  }
+
   const [existedUser] = await db
-    .select({ id: userProfile.user_id })
+    .select({ id: userProfile.userId })
     .from(userProfile)
-    .where(eq(userProfile.user_id, userId))
+    .where(eq(userProfile.userId, existingUser.id))
     .limit(1);
 
   if (!existedUser) {
-    throw new ApiError(404, 'User not found');
+    throw new ApiError(404, 'User profile not found');
   }
 
   const [existedProduct] = await db

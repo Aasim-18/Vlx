@@ -9,7 +9,6 @@ export const products = pgTable(
     name: varchar('name', { length: 225 }).notNull(),
     category: varchar('category', { length: 55 }).notNull(),
     userId: uuid('user_id')
-      .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     price: integer('price').notNull(),
     collageName: varchar('collageName', { length: 225 }),

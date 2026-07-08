@@ -470,7 +470,7 @@ async function seed() {
   // Insert 50 user profiles
   console.log('Inserting 50 user profiles...');
   const profileValues = insertedUsers.map((u, i) => ({
-    user_id: u.id,
+    userId: u.id,
     name: indianNames[i]!,
     mobile: randomMobile(9876543210, i),
     batch: pickRandom(batches),

@@ -6,10 +6,10 @@ import { ApiResponse } from '../../utils/ApiResponse.js';
 import { Webhook } from 'svix';
 import type { WebhookEvent } from '@clerk/backend';
 import { db } from '../../DB/index.js';
-import { eq, ne, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { userSchma } from './userValidation.js';
 
-const HandleUser = AsyncHandler(async (req, res) => {
+const handleUser = AsyncHandler(async (req, res) => {
   const WebhookSecret = process.env.WEBHOOK_SECRET;
 
   if (!WebhookSecret) {
@@ -109,8 +109,8 @@ const HandleUser = AsyncHandler(async (req, res) => {
   }
 });
 
-const SetDetails = AsyncHandler(async (req, res) => {
-  const userId = req.userId!;
+const createProfile = AsyncHandler(async (req, res) => {
+  const clerkId = req.userId!;
 
   const result = userSchma.safeParse(req.body);
 
@@ -118,35 +118,43 @@ const SetDetails = AsyncHandler(async (req, res) => {
     throw new ApiError(400, 'Validation Failed');
   }
 
-  const user = result.data;
+  const data = result.data;
 
-  const existedMobile = await db.query.userProfile.findFirst({
-    where: and(eq(userProfile.mobile, user.mobile), ne(userProfile.user_id, userId)),
-    columns: {
-      mobile: true,
-    },
-  });
-
-  if (existedMobile) {
-    throw new ApiError(409, 'Mobile Number Already exists');
+  const [existedUser] = await db
+  .select({userId: user.id})
+  .from(user)
+  .where(eq(user.clerkId, clerkId))
+  .limit(1)
+  
+  if(!existedUser){
+    throw new ApiError(404, "User not found")
   }
 
-  const [User] = await db
-    .update(userProfile)
-    .set({
-      name: user.name,
-      mobile: user.mobile,
-      batch: user.batch,
-      collageName: user.collageName,
-    })
-    .where(eq(userProfile.user_id, userId))
-    .returning();
+  const [existingProfile] = await db
+  .select({userId: userProfile.userId})
+  .from(userProfile)
+  .where(eq(userProfile.userId, existedUser.userId))
+  .limit(1);
 
-  if (!User) {
-    throw new ApiError(500, 'Error Updating User Details');
+  if(existingProfile){
+    throw new ApiError(400, "Profile already exists")
   }
 
-  res.status(200).json(new ApiResponse(200, User, 'Registration Completed'));
+  const newProfile = await db.insert(userProfile).values({
+    userId: existedUser.userId,
+    name: data.name,
+    mobile: data.mobile,
+    batch: data.batch,
+    collageName: data.collageName
+  }).returning();
+  
+   if(!newProfile) {
+    throw new ApiError(500, "Failed to create profile")
+   }
+
+   res.status(200).json(new ApiResponse(200, newProfile, "Profile Created Successfully"))
+
+  
 });
 
-export { HandleUser, SetDetails };
+export { handleUser, createProfile };
