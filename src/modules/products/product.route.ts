@@ -9,14 +9,22 @@ import {
 } from './product.controller.js';
 import { upload } from '../../middlewares/multer.js';
 import { requireAuth } from '../../middlewares/requireAuth.js';
+import { rateLimit } from '../../middlewares/rateLimiter.js';
+import { authWriteLimiter } from '../../lib/globalLimiters.js';
 
 const router = Router();
 
-router.post('/', requireAuth, upload.single('images'), createProduct);
+router.post('/', requireAuth, rateLimit(authWriteLimiter), upload.single('images'), createProduct);
 router.get('/', getAllProducts);
 router.get('/:id', requireAuth, getProduct);
-router.put('/:id', requireAuth, upload.single('images'), updateProduct);
-router.patch('/:id/status', requireAuth, updateProductStatus);
-router.delete('/:id', requireAuth, deleteProduct);
+router.put(
+  '/:id',
+  requireAuth,
+  rateLimit(authWriteLimiter),
+  upload.single('images'),
+  updateProduct,
+);
+router.patch('/:id/status', requireAuth, rateLimit(authWriteLimiter), updateProductStatus);
+router.delete('/:id', requireAuth, rateLimit(authWriteLimiter), deleteProduct);
 
 export default router;

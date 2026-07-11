@@ -5,6 +5,8 @@ import { clerkMiddleware } from '@clerk/express';
 import ngrok from '@ngrok/ngrok';
 import { DbConnection } from './config/db.js';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
+import { rateLimit } from './middlewares/rateLimiter.js';
+import { globalLimiter } from './lib/globalLimiters.js';
 // import Routes here
 import userRoutes from './modules/user/user.route.js';
 import productRoutes from './modules/products/product.route.js';
@@ -32,6 +34,7 @@ app.get('/health', (_req, res) => {
   res.send('Server is Up and Running');
 });
 
+app.use('/api/v1', rateLimit(globalLimiter));
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/products', productRoutes);
 
