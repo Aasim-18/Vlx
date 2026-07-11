@@ -15,7 +15,7 @@ import { authWriteLimiter } from '../../lib/globalLimiters.js';
 const router = Router();
 
 router.post('/', requireAuth, rateLimit(authWriteLimiter), upload.single('images'), createProduct);
-router.get('/', getAllProducts);
+router.get('/', requireAuth,getAllProducts);
 router.get('/:id', requireAuth, getProduct);
 router.put(
   '/:id',
