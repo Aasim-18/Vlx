@@ -1,6 +1,5 @@
-import { pgTable, timestamp, varchar, uuid} from 'drizzle-orm/pg-core';
+import { pgTable, timestamp, varchar, uuid } from 'drizzle-orm/pg-core';
 import { user } from './exporter.js';
-
 
 export const userProfile = pgTable('usersprofile', {
   id: uuid('id').primaryKey().defaultRandom(),

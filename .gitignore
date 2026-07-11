@@ -141,6 +141,8 @@ dist
 # SvelteKit build / generate output
 .svelte-kit
 
+.claude
+
 dist/
 *.js.map
 *.d.ts

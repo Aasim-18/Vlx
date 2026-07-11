@@ -110,7 +110,11 @@ const handleUser = AsyncHandler(async (req, res) => {
 });
 
 const createProfile = AsyncHandler(async (req, res) => {
-  const clerkId = req.userId!;
+  const clerkId = req.userId;
+
+  if (!clerkId) {
+    throw new ApiError(404, 'user not found');
+  }
 
   const result = userSchma.safeParse(req.body);
 
@@ -121,40 +125,41 @@ const createProfile = AsyncHandler(async (req, res) => {
   const data = result.data;
 
   const [existedUser] = await db
-  .select({userId: user.id})
-  .from(user)
-  .where(eq(user.clerkId, clerkId))
-  .limit(1)
-  
-  if(!existedUser){
-    throw new ApiError(404, "User not found")
+    .select({ userId: user.id })
+    .from(user)
+    .where(eq(user.clerkId, clerkId))
+    .limit(1);
+
+  if (!existedUser) {
+    throw new ApiError(404, 'User not found');
   }
 
   const [existingProfile] = await db
-  .select({userId: userProfile.userId})
-  .from(userProfile)
-  .where(eq(userProfile.userId, existedUser.userId))
-  .limit(1);
+    .select({ userId: userProfile.userId })
+    .from(userProfile)
+    .where(eq(userProfile.userId, existedUser.userId))
+    .limit(1);
 
-  if(existingProfile){
-    throw new ApiError(400, "Profile already exists")
+  if (existingProfile) {
+    throw new ApiError(400, 'Profile already exists');
   }
 
-  const newProfile = await db.insert(userProfile).values({
-    userId: existedUser.userId,
-    name: data.name,
-    mobile: data.mobile,
-    batch: data.batch,
-    collageName: data.collageName
-  }).returning();
-  
-   if(!newProfile) {
-    throw new ApiError(500, "Failed to create profile")
-   }
+  const newProfile = await db
+    .insert(userProfile)
+    .values({
+      userId: existedUser.userId,
+      name: data.name,
+      mobile: data.mobile,
+      batch: data.batch,
+      collageName: data.collageName,
+    })
+    .returning();
 
-   res.status(200).json(new ApiResponse(200, newProfile, "Profile Created Successfully"))
+  if (!newProfile) {
+    throw new ApiError(500, 'Failed to create profile');
+  }
 
-  
+  res.status(200).json(new ApiResponse(200, newProfile, 'Profile Created Successfully'));
 });
 
 export { handleUser, createProfile };

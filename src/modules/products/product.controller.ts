@@ -18,7 +18,11 @@ const createProduct = AsyncHandler(async (req, res) => {
 
   const product = result.data;
 
-  const clerkId = req.userId!;
+  const clerkId = req.userId;
+
+  if (!clerkId) {
+    throw new ApiError(404, 'user not found');
+  }
 
   const [existingUser] = await db
     .select({ id: user.id })
@@ -78,7 +82,11 @@ const updateProduct = AsyncHandler(async (req, res) => {
   }
 
   const product = result.data;
-  const clerkId = req.userId!;
+  const clerkId = req.userId;
+
+  if (!clerkId) {
+    throw new ApiError(404, 'user not found');
+  }
 
   const [existingUser] = await db
     .select({ id: user.id })
@@ -159,7 +167,11 @@ const updateProductStatus = AsyncHandler(async (req, res) => {
     throw new ApiError(400, 'ID not provided');
   }
 
-  const userId = req.userId!;
+  const userId = req.userId;
+
+  if (!userId) {
+    throw new ApiError(404, 'user not found');
+  }
 
   const [existingUser] = await db
     .select({ id: user.id })
@@ -219,7 +231,11 @@ const deleteProduct = AsyncHandler(async (req, res) => {
     throw new ApiError(400, 'ID not provided');
   }
 
-  const userId = req.userId!;
+  const userId = req.userId;
+
+  if (!userId) {
+    throw new ApiError(404, 'user not found');
+  }
 
   const [existedUser] = await db
     .select({ id: user.id })
@@ -273,8 +289,6 @@ const getProduct = AsyncHandler(async (req, res) => {
 });
 
 // My listings
-
-
 
 // Get All Products
 

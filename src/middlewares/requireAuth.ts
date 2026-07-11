@@ -10,6 +10,7 @@ const requireAuth = (req: Request, _res: Response, next: NextFunction) => {
   }
 
   req.userId = userId;
+
   next();
 };
 

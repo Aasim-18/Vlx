@@ -12,11 +12,11 @@ import { requireAuth } from '../../middlewares/requireAuth.js';
 
 const router = Router();
 
-router.post('/create', requireAuth, upload.single('images'), createProduct);
-router.get('/get', getAllProducts);
-router.put('/update/:id', requireAuth, upload.single('images'), updateProduct);
-router.delete('/delete/:id', requireAuth, deleteProduct);
-router.put('/update-status/:id', requireAuth, updateProductStatus);
-router.get('/get/:id', requireAuth, getProduct);
+router.post('/', requireAuth, upload.single('images'), createProduct);
+router.get('/', getAllProducts);
+router.get('/:id', requireAuth, getProduct);
+router.put('/:id', requireAuth, upload.single('images'), updateProduct);
+router.patch('/:id/status', requireAuth, updateProductStatus);
+router.delete('/:id', requireAuth, deleteProduct);
 
 export default router;
