@@ -298,6 +298,9 @@ const getAllProducts = AsyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, AllProducts, 'Products Retrieved Successfully'));
 });
 
+// All the important CRUD endpoints are Completed, with most of the industry standards as i can follow.
+// just needed an Pagination and filtering system and search Route, which i will implement later.
+
 export {
   createProduct,
   updateProduct,
